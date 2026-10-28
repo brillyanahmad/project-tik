@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Input Data - Penjualan UMKM</title>
+<style>
+:root{--bg:#f7f7f6;--panel:#fff;--tx:#1b1d1f;--mu:#6b7076;--ln:#e4e5e3;--ac:#14532d;--wr:#a16207;--bd:#b91c1c}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1110;--panel:#171a18;--tx:#eceeec;--mu:#9aa09c;--ln:#2a2e2b;--ac:#6fcf97;--wr:#e0b44a;--bd:#f07171}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-variant-numeric:tabular-nums}
+.wrap{max-width:900px;margin:0 auto;padding:36px 20px 72px}
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:28px}
+h1{font-size:24px;font-weight:600;margin:0;letter-spacing:-.02em}
+.sub,.hint{color:var(--mu);font-size:13px}
+.lnk{display:inline-block;margin-top:8px;font-size:13px;color:var(--ac)}
+.tabs{display:flex;border:1px solid var(--ln);border-radius:8px;overflow:hidden;background:var(--panel)}
+.tabs button{border:0;border-right:1px solid var(--ln);background:none;color:var(--mu);padding:7px 16px;font:inherit;font-size:13px;cursor:pointer}
+.tabs button:last-child{border-right:0}
+.tabs button.on{background:var(--ac);color:var(--bg);font-weight:500}
+h2{font-size:16px;font-weight:600;margin:36px 0 4px}
+.desc{color:var(--mu);font-size:13px;margin:0 0 16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px 16px;align-items:end}
+.wide{grid-column:1/-1}
+label{display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--mu)}
+input,select{font:inherit;color:var(--tx);background:var(--panel);border:1px solid var(--ln);border-radius:8px;padding:9px 10px;width:100%}
+input:focus,select:focus,.btn:focus-visible,.tabs button:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+.btn{font:inherit;font-size:14px;border:1px solid var(--ac);background:var(--ac);color:var(--bg);border-radius:8px;padding:9px 18px;cursor:pointer;font-weight:500}
+.btn.ghost{background:none;color:var(--tx);border-color:var(--ln)}
+.btn.sm{padding:3px 10px;font-size:13px;font-weight:400}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.sum{grid-column:1/-1;display:flex;gap:28px;flex-wrap:wrap;padding:12px 0;border-top:1px solid var(--ln);border-bottom:1px solid var(--ln);font-size:14px}
+.fee{display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-size:13px;color:var(--mu);margin-top:16px}
+.fee input{width:72px;padding:5px 8px}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-weight:500;color:var(--mu);font-size:13px;padding:0 12px 10px 0;border-bottom:1px solid var(--ln);white-space:nowrap}
+td{padding:10px 12px 10px 0;border-bottom:1px solid var(--ln);white-space:nowrap}
+tr:last-child td{border-bottom:0}
+.r{text-align:right}td:last-child,th:last-child{padding-right:0}
+.drop{display:flex;align-items:center;justify-content:center;text-align:center;border:1px dashed var(--mu);border-radius:10px;padding:34px 16px;color:var(--mu);cursor:pointer;margin-top:14px}
+.drop.on{border-color:var(--ac);color:var(--tx);background:var(--panel)}
+.warn{border:1px solid var(--wr);color:var(--wr);border-radius:8px;padding:12px 14px;margin-bottom:20px;font-size:14px}
+code{background:var(--ln);padding:2px 6px;border-radius:4px;font-size:13px}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ac);color:var(--bg);padding:10px 18px;border-radius:8px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s}
+#toast.show{opacity:1}#toast.err{background:var(--bd);color:#fff}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div>
+    <h1>Input data</h1>
+    <div class="sub">Tersimpan ke folder data/, lalu dashboard dihitung ulang otomatis.</div>
+    <a class="lnk" href="index.html">Kembali ke dashboard</a>
+  </div>
+  <div class="tabs" id="tabs">
+    <button data-t="jual" class="on">Catat penjualan</button>
+    <button data-t="produk">Produk dan stok</button>
+    <button data-t="impor">Impor CSV</button>
+  </div>
+</header>
+<div id="banner"></div>
+
+<main id="jual">
+  <form id="fJual" class="grid">
+    <label>Tanggal<input type="date" id="jTgl" required></label>
+    <label>Platform<select id="jPf"><option value="shopee">Shopee</option><option value="tokopedia">Tokopedia</option></select></label>
+    <label class="wide">Produk<select id="jSku" required></select></label>
+    <label>Jumlah<input type="number" id="jQty" min="1" value="1" required></label>
+    <label>Harga jual per unit (Rp)<input type="number" id="jHarga" min="0" required></label>
+    <label>Biaya platform (Rp)<input type="number" id="jBiaya" min="0" value="0"></label>
+    <label>No. pesanan (opsional)<input id="jOrder" placeholder="dibuat otomatis"></label>
+    <div class="sum" id="jSum"></div>
+    <div><button class="btn" id="jBtn">Simpan penjualan</button></div>
+  </form>
+  <div class="fee">Biaya platform terisi otomatis dari persentase ini:
+    <label style="flex-direction:row;align-items:center;gap:6px">Shopee<input type="number" id="feeS" step="0.1" min="0" value="8">%</label>
+    <label style="flex-direction:row;align-items:center;gap:6px">Tokopedia<input type="number" id="feeT" step="0.1" min="0" value="6">%</label>
+  </div>
+  <h2>Penjualan terbaru</h2>
+  <p class="desc">Salah input? Hapus barisnya lalu catat ulang.</p>
+  <div class="tw"><table id="tJual"></table></div>
+</main>
+
+<main id="produk" hidden>
+  <form id="fProduk" class="grid">
+    <label>SKU<input id="pSku" required placeholder="KRP-01"></label>
+    <label class="wide">Nama produk<input id="pNama" required></label>
+    <label>Harga modal (Rp)<input type="number" id="pModal" min="0" required></label>
+    <label>Harga jual (Rp)<input type="number" id="pJual" min="0"></label>
+    <label>Stok awal<input type="number" id="pStok" min="0" required value="0"></label>
+    <label>Batas stok menipis<input type="number" id="pMin" min="0" required value="10"></label>
+    <div><button class="btn">Simpan produk</button> <button type="button" class="btn ghost" id="pReset">Kosongkan</button></div>
+  </form>
+  <h2>Daftar produk</h2>
+  <p class="desc">Pilih Tambah stok setiap kali barang masuk gudang. Sisa stok dihitung dari stok awal dikurangi penjualan.</p>
+  <div class="tw"><table id="tProduk"></table></div>
+</main>
+
+<main id="impor" hidden>
+  <h2 style="margin-top:0">Impor dari ekspor Shopee atau Tokopedia</h2>
+  <p class="desc">Unduh laporan pesanan dari Seller Center. Jika berbentuk Excel, buka lalu simpan sebagai CSV. Baris yang sudah pernah diimpor otomatis dilewati.</p>
+  <label style="max-width:240px">Platform<select id="iPf"><option value="shopee">Shopee</option><option value="tokopedia">Tokopedia</option></select></label>
+  <label class="drop" id="drop">Tarik file CSV ke sini atau klik untuk memilih<input type="file" id="iFile" accept=".csv,text/csv" hidden></label>
+  <div id="iMap" hidden>
+    <h2>Cocokkan kolom</h2>
+    <p class="desc">Kolom sudah ditebak otomatis. Ubah jika ada yang keliru, pilihan Anda diingat untuk impor berikutnya.</p>
+    <div class="grid" id="iSel"></div>
+    <div id="iInfo" style="margin:18px 0;font-size:14px"></div>
+    <div class="tw"><table id="iPrev"></table></div>
+    <p><button class="btn" id="iGo">Impor</button></p>
+  </div>
+</main>
+<div id="toast" role="status"></div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const rp = n => "Rp " + Math.round(+n || 0).toLocaleString("id-ID");
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const NAMA = {shopee: "Shopee", tokopedia: "Tokopedia"}, PFX = {shopee: "SPE", tokopedia: "TKP"};
+let S = {produk: [], shopee: [], tokopedia: []};
+const P = sku => S.produk.find(p => p.sku === sku);
+const store = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } };
+const fee = () => ({shopee: +$("feeS").value || 0, tokopedia: +$("feeT").value || 0});
+
+function toast(m, err) {
+  const t = $("toast"); t.textContent = m; t.className = "show" + (err ? " err" : "");
+  clearTimeout(toast.h); toast.h = setTimeout(() => t.className = "", 3000);
+}
+async function api(path, body) {
+  const r = await fetch(path, body ? {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)} : undefined);
+  const j = await r.json();
+  if (!r.ok) throw new Error(j.error || "Gagal menyimpan");
+  return j;
+}
+async function muat() {
+  try { S = await api("/api/data"); $("banner").innerHTML = ""; }
+  catch (e) { $("banner").innerHTML = '<div class="warn">Halaman ini perlu server lokal agar data bisa disimpan. Jalankan <code>python server.py</code> lalu buka <code>http://localhost:8000/input.html</code>.</div>'; }
+  renderProduk(); renderJual(); hitungJual();
+}
+async function kirim(path, body, pesan) {
+  try { const j = await api(path, body); await muat(); toast(pesan || "Tersimpan"); return j; }
+  catch (e) { toast(e.message, true); }
+}
+
+/* Tab */
+$("tabs").onclick = e => {
+  const t = e.target.dataset.t; if (!t) return;
+  document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("on", b === e.target));
+  ["jual", "produk", "impor"].forEach(k => $(k).hidden = k !== t);
+};
+
+/* Catat penjualan */
+let biayaManual = false;
+$("jTgl").value = new Date().toLocaleDateString("sv-SE");
+["feeS", "feeT"].forEach(id => { const v = store(id); if (v) $(id).value = v; });
+
+function hitungJual() {
+  const q = +$("jQty").value || 0, h = +$("jHarga").value || 0, p = P($("jSku").value);
+  if (!biayaManual) $("jBiaya").value = Math.round(q * h * fee()[$("jPf").value] / 100);
+  const omzet = q * h, modal = q * (+p?.harga_modal || 0), biaya = +$("jBiaya").value || 0;
+  $("jSum").innerHTML = `<span>Omzet <b>${rp(omzet)}</b></span><span>Modal <b>${rp(modal)}</b></span><span>Perkiraan laba <b>${rp(omzet - modal - biaya)}</b></span>`;
+}
+function renderJual() {
+  const cur = $("jSku").value;
+  $("jSku").innerHTML = S.produk.length
+    ? S.produk.map(p => `<option value="${esc(p.sku)}">${esc(p.nama_produk)} (${esc(p.sku)})</option>`).join("")
+    : '<option value="">Belum ada produk, tambahkan dulu di tab Produk dan stok</option>';
+  if (P(cur)) $("jSku").value = cur;
+  const rows = [];
+  for (const pf of ["shopee", "tokopedia"]) S[pf].forEach((r, i) => rows.push({...r, pf, i}));
+  rows.sort((a, b) => b.tanggal.localeCompare(a.tanggal) || b.i - a.i);
+  $("tJual").innerHTML = rows.length
+    ? `<thead><tr><th>Tanggal</th><th>Platform</th><th>Produk</th><th class="r">Jumlah</th><th class="r">Omzet</th><th></th></tr></thead><tbody>` +
+      rows.slice(0, 10).map(r => `<tr><td>${esc(r.tanggal)}</td><td>${NAMA[r.pf]}</td><td>${esc(P(r.sku)?.nama_produk || r.sku)}</td>
+        <td class="r">${esc(r.jumlah)}</td><td class="r">${rp(r.jumlah * r.harga_jual)}</td>
+        <td class="r"><button class="btn ghost sm" data-pf="${r.pf}" data-i="${r.i}">Hapus</button></td></tr>`).join("") + "</tbody>"
+    : "<tbody><tr><td>Belum ada penjualan. Catat yang pertama di atas.</td></tr></tbody>";
+}
+$("jSku").onchange = () => { biayaManual = false; const p = P($("jSku").value); if (p?.harga_jual) $("jHarga").value = p.harga_jual; hitungJual(); };
+$("jPf").onchange = () => { biayaManual = false; hitungJual(); };
+["jQty", "jHarga"].forEach(id => $(id).oninput = hitungJual);
+$("jBiaya").oninput = () => { biayaManual = true; hitungJual(); };
+["feeS", "feeT"].forEach(id => $(id).oninput = () => { store(id, $(id).value); hitungJual(); });
+$("fJual").onsubmit = async e => {
+  e.preventDefault();
+  const tgl = $("jTgl").value, pf = $("jPf").value;
+  if (!$("jSku").value) return toast("Pilih produk dulu", true);
+  const order = $("jOrder").value.trim() || PFX[pf] + tgl.replace(/-/g, "") + Date.now().toString(36).slice(-5).toUpperCase();
+  const ok = await kirim("/api/penjualan", {platform: pf, rows: [{tanggal: tgl, order_id: order, sku: $("jSku").value,
+    jumlah: +$("jQty").value, harga_jual: +$("jHarga").value, biaya_platform: +$("jBiaya").value || 0}]}, "Penjualan tersimpan");
+  if (ok) { $("jQty").value = 1; $("jOrder").value = ""; biayaManual = false; hitungJual(); $("jSku").focus(); }
+};
+$("tJual").onclick = async e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (confirm("Hapus baris penjualan ini?")) kirim("/api/hapus", {platform: b.dataset.pf, index: +b.dataset.i}, "Dihapus");
+};
+
+/* Produk dan stok */
+function kosongkanProduk() { $("fProduk").reset(); $("pSku").readOnly = false; $("pStok").value = 0; $("pMin").value = 10; }
+function renderProduk() {
+  $("tProduk").innerHTML = S.produk.length
+    ? `<thead><tr><th>Produk</th><th class="r">Modal</th><th class="r">Harga jual</th><th class="r">Stok awal</th><th></th></tr></thead><tbody>` +
+      S.produk.map(p => `<tr><td>${esc(p.nama_produk)}<div class="hint">${esc(p.sku)}</div></td>
+        <td class="r">${rp(p.harga_modal)}</td><td class="r">${p.harga_jual ? rp(p.harga_jual) : "-"}</td><td class="r">${esc(p.stok_awal)}</td>
+        <td class="r"><button class="btn ghost sm" data-a="stok" data-s="${esc(p.sku)}">Tambah stok</button>
+        <button class="btn ghost sm" data-a="ubah" data-s="${esc(p.sku)}">Ubah</button>
+        <button class="btn ghost sm" data-a="hapus" data-s="${esc(p.sku)}">Hapus</button></td></tr>`).join("") + "</tbody>"
+    : "<tbody><tr><td>Belum ada produk. Isi formulir di atas.</td></tr></tbody>";
+}
+$("fProduk").onsubmit = e => {
+  e.preventDefault();
+  const item = {sku: $("pSku").value.trim(), nama_produk: $("pNama").value.trim(), harga_modal: $("pModal").value,
+    harga_jual: $("pJual").value, stok_awal: $("pStok").value, stok_minimum: $("pMin").value};
+  const list = S.produk.filter(p => p.sku !== item.sku);
+  const idx = S.produk.findIndex(p => p.sku === item.sku);
+  list.splice(idx < 0 ? list.length : idx, 0, item);
+  kirim("/api/produk", {produk: list}, "Produk tersimpan").then(kosongkanProduk);
+};
+$("pReset").onclick = kosongkanProduk;
+$("tProduk").onclick = e => {
+  const b = e.target.closest("button"); if (!b) return;
+  const p = P(b.dataset.s);
+  if (b.dataset.a === "ubah") {
+    $("pSku").value = p.sku; $("pSku").readOnly = true; $("pNama").value = p.nama_produk; $("pModal").value = p.harga_modal;
+    $("pJual").value = p.harga_jual || ""; $("pStok").value = p.stok_awal; $("pMin").value = p.stok_minimum; $("pNama").focus();
+  } else if (b.dataset.a === "stok") {
+    const n = parseInt(prompt(`Tambah stok ${p.nama_produk} berapa unit?`), 10);
+    if (n > 0) kirim("/api/produk", {produk: S.produk.map(x => x.sku === p.sku ? {...x, stok_awal: +x.stok_awal + n} : x)}, `Stok bertambah ${n} unit`);
+  } else if (confirm(`Hapus ${p.nama_produk}? Penjualan SKU ini tidak ikut terhitung lagi di dashboard.`)) {
+    kirim("/api/produk", {produk: S.produk.filter(x => x.sku !== p.sku)}, "Produk dihapus");
+  }
+};
+
+/* Impor CSV */
+const FIELDS = [
+  ["tanggal", "Tanggal pesanan", ["tanggal", "date", "waktu", "created"]],
+  ["order_id", "No. pesanan", ["no. pesanan", "nomor pesanan", "order id", "order_id", "invoice", "pesanan"]],
+  ["sku", "SKU produk", ["sku"]],
+  ["jumlah", "Jumlah", ["jumlah", "quantity", "qty"]],
+  ["harga_jual", "Harga per unit", ["setelah diskon", "harga satuan", "harga", "price"]],
+  ["biaya_platform", "Biaya platform (opsional)", ["biaya", "fee", "komisi", "admin"]]
+];
+let CSV = null;
+
+function parseCSV(t) {
+  t = t.replace(/^\uFEFF/, "");
+  const f = t.split(/\r?\n/)[0], d = (f.match(/;/g) || []).length > (f.match(/,/g) || []).length ? ";" : ",";
+  const rows = []; let r = [], c = "", q = false;
+  for (let i = 0; i < t.length; i++) {
+    const ch = t[i];
+    if (q) { if (ch === '"') { if (t[i + 1] === '"') { c += '"'; i++; } else q = false; } else c += ch; }
+    else if (ch === '"') q = true;
+    else if (ch === d) { r.push(c); c = ""; }
+    else if (ch === "\n" || ch === "\r") { if (ch === "\r" && t[i + 1] === "\n") i++; r.push(c); c = ""; rows.push(r); r = []; }
+    else c += ch;
+  }
+  if (c || r.length) { r.push(c); rows.push(r); }
+  return rows.filter(x => x.some(v => v.trim()));
+}
+function angka(v) {
+  let s = String(v ?? "").replace(/rp|\s/gi, "");
+  if (!s) return NaN;
+  if (s.includes(".") && s.includes(",")) s = s.replace(/\./g, "").replace(",", ".");
+  else if (/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, "");
+  else s = s.replace(",", ".");
+  return Number(s);
+}
+function tanggal(v) {
+  v = String(v || "");
+  let m = v.match(/(\d{4})-(\d{2})-(\d{2})/); if (m) return m[0];
+  m = v.match(/(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4})/);
+  return m ? `${m[3]}-${m[2].padStart(2, "0")}-${m[1].padStart(2, "0")}` : null;
+}
+function tebak(h, pf) {
+  const saved = JSON.parse(store("map_" + pf) || "{}"), low = h.map(x => x.toLowerCase()), out = {};
+  for (const [k, , kws] of FIELDS) {
+    let i = saved[k] !== undefined ? h.indexOf(saved[k]) : -1;
+    for (const w of kws) { if (i >= 0) break; i = low.findIndex(x => x.includes(w)); }
+    out[k] = i;
+  }
+  return out;
+}
+async function bacaFile(file) {
+  if (!file) return;
+  const rows = parseCSV(await file.text());
+  if (rows.length < 2) return toast("File kosong atau bukan CSV", true);
+  CSV = {head: rows[0].map(x => x.trim()), body: rows.slice(1)};
+  const g = tebak(CSV.head, $("iPf").value);
+  $("iSel").innerHTML = FIELDS.map(([k, label]) => `<label>${label}<select data-f="${k}"><option value="-1">(tidak ada)</option>` +
+    CSV.head.map((h, i) => `<option value="${i}" ${g[k] === i ? "selected" : ""}>${esc(h)}</option>`).join("") + "</select></label>").join("");
+  $("iMap").hidden = false; praTinjau();
+}
+let HASIL = [];
+function praTinjau() {
+  const pf = $("iPf").value, m = {};
+  document.querySelectorAll("#iSel select").forEach(s => m[s.dataset.f] = +s.value);
+  const pakaiFee = m.biaya_platform < 0, unk = new Set(); let lewat = 0; HASIL = [];
+  CSV.body.forEach((r, n) => {
+    const tgl = tanggal(r[m.tanggal]), sku = (r[m.sku] || "").trim(), qty = angka(r[m.jumlah]), harga = angka(r[m.harga_jual]);
+    if (!tgl || !sku || !(qty > 0) || isNaN(harga)) { lewat++; return; }
+    if (!P(sku)) unk.add(sku);
+    const biaya = pakaiFee ? Math.round(qty * harga * fee()[pf] / 100) : (angka(r[m.biaya_platform]) || 0);
+    const order = m.order_id >= 0 && (r[m.order_id] || "").trim() ? r[m.order_id].trim() : `${PFX[pf]}${tgl.replace(/-/g, "")}-${n + 1}`;
+    HASIL.push({tanggal: tgl, order_id: order, sku, jumlah: qty, harga_jual: harga, biaya_platform: biaya});
+  });
+  $("iInfo").innerHTML = `<b>${HASIL.length}</b> baris siap diimpor` + (lewat ? `, ${lewat} dilewati karena tanggal, SKU, jumlah, atau harga tidak terbaca` : "") + "." +
+    (pakaiFee ? ` Biaya platform dihitung ${fee()[pf]}% dari omzet.` : "") +
+    (unk.size ? `<div class="warn" style="margin:12px 0 0">SKU belum terdaftar: ${[...unk].slice(0, 8).map(esc).join(", ")}${unk.size > 8 ? " dan lainnya" : ""}. Tambahkan dulu di tab Produk dan stok, kalau tidak baris ini tidak ikut dihitung.</div>` : "");
+  $("iPrev").innerHTML = HASIL.length ? `<thead><tr><th>Tanggal</th><th>No. pesanan</th><th>SKU</th><th class="r">Jumlah</th><th class="r">Harga</th><th class="r">Biaya</th></tr></thead><tbody>` +
+    HASIL.slice(0, 5).map(r => `<tr><td>${r.tanggal}</td><td>${esc(r.order_id)}</td><td>${esc(r.sku)}</td><td class="r">${r.jumlah}</td><td class="r">${rp(r.harga_jual)}</td><td class="r">${rp(r.biaya_platform)}</td></tr>`).join("") + "</tbody>" : "";
+  $("iGo").disabled = !HASIL.length; $("iGo").textContent = HASIL.length ? `Impor ${HASIL.length} baris` : "Impor";
+}
+$("iSel").onchange = praTinjau;
+$("iPf").onchange = () => { if (CSV) { $("iMap").hidden = true; CSV = null; } };
+$("iFile").onchange = e => bacaFile(e.target.files[0]);
+["dragover", "dragenter"].forEach(ev => $("drop").addEventListener(ev, e => { e.preventDefault(); $("drop").classList.add("on"); }));
+["dragleave", "drop"].forEach(ev => $("drop").addEventListener(ev, () => $("drop").classList.remove("on")));
+$("drop").addEventListener("drop", e => { e.preventDefault(); bacaFile(e.dataTransfer.files[0]); });
+$("iGo").onclick = async () => {
+  const pf = $("iPf").value, map = {};
+  document.querySelectorAll("#iSel select").forEach(s => { if (+s.value >= 0) map[s.dataset.f] = CSV.head[+s.value]; });
+  store("map_" + pf, JSON.stringify(map));
+  const j = await kirim("/api/penjualan", {platform: pf, rows: HASIL}, "Impor selesai");
+  if (j) { toast(`${j.ditambah} baris ditambahkan, ${j.dilewati} duplikat dilewati`); $("iMap").hidden = true; $("iFile").value = ""; CSV = null; }
+};
+
+muat();
+</script>
+</body>
+</html>
